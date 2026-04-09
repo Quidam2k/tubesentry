@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}TubeSentry - {{ account.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Dashboard</a> &raquo; {{ account.name }}
+</div>
+
+<div class="header-row">
+    <div>
+        <h1>{{ account.name }}</h1>
+        {% if account.youtube_handle %}
+            <p class="muted">{{ account.youtube_handle }}</p>
+        {% endif %}
+    </div>
+    <div class="header-actions">
+        <form method="post" action="/accounts/{{ account.id }}/delete" class="inline"
+              onsubmit="return confirm('Delete this account and all its data?')">
+            <button type="submit" class="btn btn-danger">Delete Account</button>
+        </form>
+    </div>
+</div>
+
+{% if account_summary %}
+<div class="summary-box">
+    <h3>Account Summary</h3>
+    <p>{{ account_summary.text }}</p>
+    <p class="small muted">Generated {{ account_summary.created_at.strftime('%Y-%m-%d %H:%M') }} using {{ account_summary.model_used }}</p>
+</div>
+{% endif %}
+
+<div class="section">
+    <div class="header-row">
+        <h2>Channels</h2>
+    </div>
+
+    <form method="post" action="/channels/add" class="form form-inline">
+        <input type="hidden" name="account_id" value="{{ account.id }}">
+        <input type="text" name="channel_url" required placeholder="YouTube channel URL" class="input-wide">
+        <label class="checkbox-label">
+            <input type="checkbox" name="is_uploads" value="true">
+            This is {{ account.name }}'s own channel
+        </label>
+        <button type="submit" class="btn btn-primary">Add Channel</button>
+    </form>
+
+    {% if channels %}
+    <div class="card-grid">
+        {% for channel in channels %}
+        <div class="card">
+            <a href="/channels/{{ channel.id }}" class="card-link-inner">
+                <h3>{{ channel.channel_name or channel.channel_url }}</h3>
+                {% if channel.is_account_uploads %}
+                    <span class="tag tag-uploads">Uploads</span>
+                {% endif %}
+                <p>{{ channel.videos | length }} video{{ "s" if channel.videos | length != 1 }}</p>
+                {% if channel.last_scanned_at %}
+                    <p class="small muted">Last scanned: {{ channel.last_scanned_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                {% else %}
+                    <p class="small muted">Not yet scanned</p>
+                {% endif %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No channels added yet. Paste a YouTube channel URL above to start monitoring.</p>
+    {% endif %}
+</div>
+{% endblock %}

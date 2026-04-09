@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}TubeSentry - Dashboard{% endblock %}
+
+{% block content %}
+<div class="header-row">
+    <h1>Monitored Accounts</h1>
+    <a href="/accounts/new" class="btn btn-primary">+ Add Account</a>
+</div>
+
+{% if accounts %}
+<div class="card-grid">
+    {% for account in accounts %}
+    <a href="/accounts/{{ account.id }}" class="card card-link">
+        <h2>{{ account.name }}</h2>
+        {% if account.youtube_handle %}
+            <p class="muted">{{ account.youtube_handle }}</p>
+        {% endif %}
+        <p>{{ account.channels | length }} channel{{ "s" if account.channels | length != 1 }}</p>
+        {% if account.notes %}
+            <p class="small muted">{{ account.notes }}</p>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No accounts yet. Add a monitored account to get started.</p>
+    <a href="/accounts/new" class="btn btn-primary">+ Add Account</a>
+</div>
+{% endif %}
+{% endblock %}

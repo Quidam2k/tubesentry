@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}TubeSentry - New Account{% endblock %}
+
+{% block content %}
+<h1>Add Monitored Account</h1>
+
+<form method="post" action="/accounts/new" class="form">
+    <div class="form-group">
+        <label for="name">Display Name</label>
+        <input type="text" id="name" name="name" required placeholder="e.g., Jake">
+    </div>
+    <div class="form-group">
+        <label for="youtube_handle">YouTube Handle (optional)</label>
+        <input type="text" id="youtube_handle" name="youtube_handle" placeholder="e.g., @jakesgaming">
+    </div>
+    <div class="form-group">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Any notes about this account..."></textarea>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Create Account</button>
+        <a href="/" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

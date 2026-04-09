@@ -1,0 +1,36 @@
+# TubeSentry Configuration
+
+# Where to store temporary audio downloads (deleted after transcription)
+download_dir: "./downloads"
+
+# Database
+database_url: "sqlite:///./tubesentry.db"
+
+# Whisper transcription settings
+whisper:
+  model: "base"  # tiny, base, small, medium, large
+  language: "en"  # or null for auto-detect
+
+# LLM summarization backend
+# Options: "claude", "openai_compatible"
+summarizer:
+  backend: "claude"
+
+  # Claude API settings (used when backend is "claude")
+  claude:
+    model: "claude-sonnet-4-20250514"
+    # api_key is read from ANTHROPIC_API_KEY env var
+
+  # OpenAI-compatible API settings (used when backend is "openai_compatible")
+  # Works with LM Studio, Ollama, or any OpenAI-compatible endpoint
+  openai_compatible:
+    base_url: "http://localhost:1234/v1"
+    model: "gemma-4"
+    api_key: "lm-studio"  # LM Studio doesn't require a real key
+
+# Scanning settings
+scanner:
+  # How many recent videos to fetch when first adding a channel
+  initial_video_limit: 50
+  # How often to check for new videos (in minutes) when running continuously
+  poll_interval_minutes: 60

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}TubeSentry - {{ video.title or "Video" }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Dashboard</a> &raquo;
+    <a href="/accounts/{{ video.channel.account.id }}">{{ video.channel.account.name }}</a> &raquo;
+    <a href="/channels/{{ video.channel.id }}">{{ video.channel.channel_name or "Channel" }}</a> &raquo;
+    {{ video.title or "Video" }}
+</div>
+
+<h1>{{ video.title or video.youtube_video_id }}</h1>
+
+<div class="video-meta">
+    <p>
+        <strong>YouTube ID:</strong>
+        <a href="https://www.youtube.com/watch?v={{ video.youtube_video_id }}" target="_blank" rel="noopener">
+            {{ video.youtube_video_id }}
+        </a>
+    </p>
+    {% if video.upload_date %}
+        <p><strong>Uploaded:</strong> {{ video.upload_date.strftime('%Y-%m-%d') }}</p>
+    {% endif %}
+    {% if video.duration_seconds %}
+        <p><strong>Duration:</strong> {{ (video.duration_seconds // 60) }}:{{ "%02d" | format(video.duration_seconds % 60) }}</p>
+    {% endif %}
+    <p><strong>Status:</strong>
+        {% if video.processed %}
+            <span class="tag tag-done">Processed</span>
+        {% else %}
+            <span class="tag tag-pending">Pending</span>
+        {% endif %}
+    </p>
+</div>
+
+{% if summary %}
+<div class="summary-box">
+    <h2>Summary</h2>
+    <p>{{ summary.text }}</p>
+    <p class="small muted">Generated {{ summary.created_at.strftime('%Y-%m-%d %H:%M') }} using {{ summary.model_used }}</p>
+</div>
+{% endif %}
+
+{% if transcript %}
+<div class="section">
+    <h2>Full Transcript</h2>
+    <div class="transcript-box">
+        {{ transcript.text }}
+    </div>
+    <p class="small muted">Language: {{ transcript.language or "unknown" }}</p>
+</div>
+{% endif %}
+
+{% if video.description %}
+<div class="section">
+    <h2>Video Description</h2>
+    <div class="description-box">
+        {{ video.description }}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

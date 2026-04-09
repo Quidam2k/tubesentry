@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}TubeSentry - Alerts{% endblock %}
+
+{% block content %}
+<h1>Alerts & Notifications</h1>
+
+<div class="section">
+    <h2>Alert Rules</h2>
+
+    <form method="post" action="/alerts/new" class="form form-inline">
+        <select name="account_id" required>
+            <option value="">Select account...</option>
+            {% for account in accounts %}
+                <option value="{{ account.id }}">{{ account.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="alert_type" required>
+            <option value="keyword">Keyword</option>
+            <option value="ai_classification">AI Classification</option>
+        </select>
+        <input type="text" name="criteria" required placeholder="Keyword or describe what to flag..." class="input-wide">
+        <button type="submit" class="btn btn-primary">Add Alert</button>
+    </form>
+
+    {% if alerts %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Type</th>
+                <th>Criteria</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.account.name }}</td>
+                <td><span class="tag">{{ alert.alert_type.value }}</span></td>
+                <td>{{ alert.criteria }}</td>
+                <td>
+                    {% if alert.enabled %}
+                        <span class="tag tag-done">Active</span>
+                    {% else %}
+                        <span class="tag tag-pending">Disabled</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="post" action="/alerts/{{ alert.id }}/toggle" class="inline">
+                        <button type="submit" class="btn btn-small">
+                            {{ "Disable" if alert.enabled else "Enable" }}
+                        </button>
+                    </form>
+                    <form method="post" action="/alerts/{{ alert.id }}/delete" class="inline">
+                        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No alert rules configured. Add one above to start monitoring for specific content.</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <div class="header-row">
+        <h2>Notifications{% if unread_count > 0 %} ({{ unread_count }} unread){% endif %}</h2>
+        {% if notifications %}
+        <form method="post" action="/alerts/notifications/read-all" class="inline">
+            <button type="submit" class="btn btn-secondary btn-small">Mark All Read</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+    <div class="notification-list">
+        {% for notif in notifications %}
+        <div class="notification {{ 'unread' if not notif.read }}">
+            <div class="notification-header">
+                <strong>
+                    <a href="/videos/{{ notif.video.id }}">{{ notif.video.title or notif.video.youtube_video_id }}</a>
+                </strong>
+                <span class="muted">{{ notif.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <p class="notification-rule">Rule: "{{ notif.alert.criteria }}" ({{ notif.alert.alert_type.value }})</p>
+            {% if notif.snippet %}
+                <p class="notification-snippet">{{ notif.snippet }}</p>
+            {% endif %}
+            {% if not notif.read %}
+            <form method="post" action="/alerts/notifications/{{ notif.id }}/read" class="inline">
+                <button type="submit" class="btn btn-small">Mark Read</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No notifications yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
