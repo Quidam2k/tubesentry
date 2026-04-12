@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 VIDEO_SUMMARY_PROMPT = """You are analyzing a YouTube video transcript for a parent who wants to understand what their child might be watching.
 
 Video title: {title}
-
+Upload date: {upload_date}
+{description_block}
 Provide a concise summary that covers:
 1. **Topic/Content**: What is this video about?
 2. **Tone**: What is the overall tone? (educational, entertainment, aggressive, calm, etc.)
@@ -107,7 +108,17 @@ class OpenAICompatibleBackend(SummarizerBackend):
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2048,
         )
-        return response.choices[0].message.content or ""
+        text = response.choices[0].message.content or ""
+        return _strip_thinking(text)
+
+
+def _strip_thinking(text: str) -> str:
+    """Strip chain-of-thought / thinking blocks that some models emit."""
+    import re
+    # Handles <|channel>thought....<channel|>, <think>...</think>, etc.
+    text = re.sub(r"<\|channel>thought.*?<channel\|>", "", text, flags=re.DOTALL)
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    return text.strip()
 
 
 def _get_backend() -> SummarizerBackend:
@@ -131,9 +142,15 @@ def get_backend() -> SummarizerBackend:
     return _backend
 
 
-def summarize_video(title: str, transcript: str) -> str:
+def summarize_video(title: str, transcript: str, description: str = "", upload_date: str = "Unknown") -> str:
     """Generate a summary for a single video transcript."""
-    prompt = VIDEO_SUMMARY_PROMPT.format(title=title, transcript=transcript)
+    description_block = f"\nVideo description: {description}\n" if description else ""
+    prompt = VIDEO_SUMMARY_PROMPT.format(
+        title=title,
+        upload_date=upload_date,
+        description_block=description_block,
+        transcript=transcript,
+    )
     logger.info(f"Summarizing video: {title}")
     return get_backend().generate(prompt)
 

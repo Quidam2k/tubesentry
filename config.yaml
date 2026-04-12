@@ -14,7 +14,7 @@ whisper:
 # LLM summarization backend
 # Options: "claude", "openai_compatible"
 summarizer:
-  backend: "claude"
+  backend: "openai_compatible"
 
   # Claude API settings (used when backend is "claude")
   claude:
@@ -25,7 +25,7 @@ summarizer:
   # Works with LM Studio, Ollama, or any OpenAI-compatible endpoint
   openai_compatible:
     base_url: "http://localhost:1234/v1"
-    model: "gemma-4"
+    model: "google/gemma-4-e4b"
     api_key: "lm-studio"  # LM Studio doesn't require a real key
 
 # Scanning settings

@@ -20,7 +20,11 @@ def scan_channel(db: Session, channel: Channel) -> list[Video]:
     limit = config.scanner.initial_video_limit
     logger.info(f"Scanning channel: {channel.channel_url} (limit={limit})")
 
-    video_infos = downloader.get_channel_video_list(channel.channel_url, limit=limit)
+    # Ensure we hit the /videos tab, not the channel root (which returns playlist tabs)
+    url = channel.channel_url.rstrip("/")
+    if not url.endswith("/videos"):
+        url += "/videos"
+    video_infos = downloader.get_channel_video_list(url, limit=limit)
 
     # Update channel name if we got it
     if video_infos and video_infos[0].channel_name and not channel.channel_name:
@@ -77,6 +81,11 @@ def process_video(db: Session, video: Video) -> None:
         video.description = result.video_info.description
     if result.video_info.duration_seconds:
         video.duration_seconds = result.video_info.duration_seconds
+    if result.video_info.upload_date and not video.upload_date:
+        try:
+            video.upload_date = datetime.strptime(result.video_info.upload_date, "%Y%m%d")
+        except ValueError:
+            pass
 
     try:
         # Transcribe
@@ -91,9 +100,12 @@ def process_video(db: Session, video: Video) -> None:
         db.add(transcript)
 
         # Summarize
+        upload_date_str = video.upload_date.strftime("%Y-%m-%d") if video.upload_date else "Unknown"
         summary_text = summarizer.summarize_video(
             title=video.title or "Unknown",
             transcript=transcription.text,
+            description=video.description or "",
+            upload_date=upload_date_str,
         )
         summary = Summary(
             scope=SummaryScope.VIDEO,
@@ -129,14 +141,21 @@ def _check_alerts(db: Session, video: Video, transcript_text: str) -> None:
 
         if alert.alert_type == AlertType.KEYWORD:
             keyword = alert.criteria.lower()
-            text_lower = transcript_text.lower()
-            if keyword in text_lower:
-                matched = True
-                # Extract context around the keyword
-                idx = text_lower.index(keyword)
-                start = max(0, idx - 100)
-                end = min(len(transcript_text), idx + len(keyword) + 100)
-                snippet = f"...{transcript_text[start:end]}..."
+            # Check transcript, title, and description for keyword matches
+            searchable = [
+                ("transcript", transcript_text),
+                ("title", video.title or ""),
+                ("description", video.description or ""),
+            ]
+            for source_name, source_text in searchable:
+                source_lower = source_text.lower()
+                if keyword in source_lower:
+                    matched = True
+                    idx = source_lower.index(keyword)
+                    start = max(0, idx - 100)
+                    end = min(len(source_text), idx + len(keyword) + 100)
+                    snippet = f"[{source_name}] ...{source_text[start:end]}..."
+                    break
 
         elif alert.alert_type == AlertType.AI_CLASSIFICATION:
             result = summarizer.classify_for_alert(
