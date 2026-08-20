@@ -94,13 +94,20 @@ class Video(Base):
 
 
 class Transcript(Base):
-    """Full text transcript from Whisper."""
+    """Full text transcript. Sourced from a YouTube caption track (manual or
+    auto-generated) when available, else from local Whisper transcription."""
     __tablename__ = "transcripts"
 
     id = Column(Integer, primary_key=True)
     video_id = Column(Integer, ForeignKey("videos.id"), nullable=False, unique=True)
     text = Column(Text, nullable=False)
     language = Column(String(10), nullable=True)
+    # How this transcript was obtained: 'caption_manual', 'caption_auto', or
+    # 'whisper'. Nullable for back-compat with rows created before provenance
+    # tracking existed. `is_auto` flags lower-confidence sources (auto captions)
+    # so they can be re-done with Whisper later if quality demands it.
+    source = Column(String(20), nullable=True)
+    is_auto = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     video = relationship("Video", back_populates="transcript")

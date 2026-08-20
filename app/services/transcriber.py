@@ -8,18 +8,18 @@ from app.config import config
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded whisper model
-_model = None
+# Lazy-loaded whisper models, cached per model name so the A/B harness can run
+# a heavier model (e.g. "medium") without evicting the default.
+_models: dict[str, object] = {}
 
 
-def _get_model():
-    global _model
-    if _model is None:
+def _get_model(model_name: str | None = None):
+    name = model_name or config.whisper.model
+    if name not in _models:
         import whisper
-        model_name = config.whisper.model
-        logger.info(f"Loading Whisper model: {model_name}")
-        _model = whisper.load_model(model_name)
-    return _model
+        logger.info(f"Loading Whisper model: {name}")
+        _models[name] = whisper.load_model(name)
+    return _models[name]
 
 
 @dataclass
@@ -28,16 +28,18 @@ class TranscriptionResult:
     language: str | None
 
 
-def transcribe(audio_path: Path) -> TranscriptionResult:
+def transcribe(audio_path: Path, model_name: str | None = None) -> TranscriptionResult:
     """Transcribe an audio file using Whisper.
 
     Args:
         audio_path: Path to the audio file.
+        model_name: Optional Whisper model override (e.g. "medium"). Defaults
+            to the configured model.
 
     Returns:
         TranscriptionResult with the full text and detected language.
     """
-    model = _get_model()
+    model = _get_model(model_name)
 
     whisper_opts = {}
     if config.whisper.language:
