@@ -73,12 +73,14 @@ def download_audio(video_id: str) -> DownloadResult:
     download_dir = _get_download_dir()
     output_template = str(download_dir / "%(id)s.%(ext)s")
 
+    # Extract to WAV (PCM) rather than MP3: Whisper decodes WAV fine and PCM is
+    # always available in ffmpeg, whereas MP3 needs the libmp3lame encoder which
+    # many ffmpeg builds omit. The file is temporary and deleted after transcribe.
     ydl_opts = {
         "format": "bestaudio/best",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "128",
+            "preferredcodec": "wav",
         }],
         "outtmpl": output_template,
         "quiet": True,
@@ -102,10 +104,13 @@ def download_audio(video_id: str) -> DownloadResult:
             channel_id=info.get("channel_id"),
         )
 
-        audio_path = download_dir / f"{video_id}.mp3"
+        audio_path = download_dir / f"{video_id}.wav"
         if not audio_path.exists():
-            # yt-dlp sometimes uses a different extension
-            candidates = list(download_dir.glob(f"{video_id}.*"))
+            # Postprocessor may leave a different extension; find the audio file.
+            candidates = [
+                p for p in download_dir.glob(f"{video_id}.*")
+                if p.suffix.lower() != ".part"
+            ]
             if candidates:
                 audio_path = candidates[0]
             else:
