@@ -158,11 +158,22 @@ def run(args) -> int:
             elapsed = time.monotonic() - stats["start"]
             avg = elapsed / i
             eta = avg * (total - i)
+            # Cumulative caption-hit % for milestone visibility.
+            cap_hits = (
+                method_counts.get(archiver.M_CAPTION_MANUAL, 0)
+                + method_counts.get(archiver.M_CAPTION_AUTO, 0)
+            )
             logger.info(
                 f"[{i}/{total}] {outcome.video_id} -> {outcome.method} "
                 f"({outcome.char_count} chars, {outcome.seconds:.1f}s) | "
+                f"caps {cap_hits}/{i} ({100 * cap_hits / i:.0f}%) | "
                 f"ETA {_fmt_hms(eta)}"
             )
+
+            # Optional throttle to stay under YouTube's bot-detection radar on
+            # large runs (opt-in; default 0 preserves prior behavior).
+            if args.sleep and i < total:
+                time.sleep(args.sleep)
 
         _print_summary(total, method_counts, method_seconds,
                        time.monotonic() - stats["start"], errors)
@@ -214,6 +225,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Re-process videos even if already marked processed")
     p.add_argument("--no-discover", action="store_true",
                    help="Skip channel discovery; only process videos already in DB")
+    p.add_argument("--sleep", type=float, default=0.0,
+                   help="Seconds to sleep between videos (throttle to avoid "
+                        "YouTube bot-detection on large runs; default 0)")
     return p
 
 
