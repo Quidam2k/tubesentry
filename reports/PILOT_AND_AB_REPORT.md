@@ -29,7 +29,7 @@ whose captions hadn't been generated; under `captions-first` it falls through to
 
 Sample = **3 recent + 3 old** (the #3074 rigor: auto-caption quality degrades with age).
 Whisper model = **medium**, run on **CPU** (see §3). Full side-by-side transcripts in
-`reports/ab/<video_id>.md`.
+`reports/ab/<video_id>.md` (kept locally, not published).
 
 | video | era | agreement | artifacts | verdict |
 |---|---|---|---|---|
@@ -77,7 +77,7 @@ the old-caption readability gap matters.
   longest sample. Caption fetch, by contrast, is ~2 s.
 
 All-Whisper over 6,800 videos on CPU is impractical (many days–weeks). This is the crux of
-the path decision and is **Todd's call**: installing CUDA-enabled torch would make a Whisper
+the path decision and is **the owner's call**: installing CUDA-enabled torch would make a Whisper
 pass feasible but would share the GPU with the TTS engine.
 
 ---
@@ -90,14 +90,14 @@ pass feasible but would share the GPU with the TTS engine.
 2. **Targeted Whisper upgrade of the weak subset.** The new `Transcript.source` / `is_auto`
    columns + `Video.upload_date` let us later run:
    *"re-transcribe with Whisper every `caption_auto` transcript from videos older than
-   ~2021."* Size and schedule this per Todd's GPU decision (CUDA → feasible; CPU-only →
+   ~2021."* Size and schedule this per the owner's GPU decision (CUDA → feasible; CPU-only →
    long background grind, but zero-urgency).
 3. **Caption misses → Whisper** automatically (already how `captions-first` behaves).
 
 This gives **full coverage quickly**, then **upgrades exactly the transcripts the A/B showed
 are weak**, with no wasted Whisper time on recent videos that don't need it.
 
-### Open decisions for Todd
+### Open decisions for the owner
 - Install CUDA torch for a feasible Whisper pass on old videos? (GPU shared with TTS.)
 - Confirm the "old" cutoff year for the Whisper-upgrade pass (proposed ~2021).
 - "The Roads with Belle" joins at full-run time (already confirmed pilot = Belle only).

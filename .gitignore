@@ -14,3 +14,12 @@ downloads/
 .venv/
 venv/
 .claude/
+
+# Internal working material (kept locally, not published)
+/notes/
+/cascades/
+NOTE-*
+session-state.md
+CLAUDE.local.md
+# Creator transcripts from the A/B test
+/reports/ab/
