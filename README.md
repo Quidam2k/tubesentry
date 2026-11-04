@@ -28,4 +28,8 @@ Everything runs locally. No data leaves your machine unless you choose a cloud L
 
 ## Status
 
-Early development — Phase 1 scaffold in progress.
+Early development, but usable. The web dashboard, per-child accounts, channel scanning, local transcription (Whisper), summaries at video, channel and account level, and keyword and AI-classification alerts are all implemented. Expect rough edges.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
