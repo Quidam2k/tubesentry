@@ -81,3 +81,7 @@ pytest tests/test_something.py::test_name -v
 - **Watch progress tracking:** How much of a video was watched. No viable data source yet.
 - **Email notifications:** Currently alerts are web UI only. Email is a stretch goal.
 - **User uploads monitoring:** Track videos posted by the monitored account.
+
+## Inbox (#6448)
+
+Asks and FYIs filed for this project land in `inbox/` at the project root, one markdown file each. **At the start of every session, list `inbox/*.md` and read any file there.** Act on it, then move the file to `inbox/done/`; never delete one.
